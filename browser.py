@@ -42,8 +42,8 @@ class ChangeChecker():
         self.slots = {}
         for d in config.DAYS:
             self.slots[d] = {}
-            for i in range(7):
-                self.slots[d][i] = -1
+            for s in config.SLOTS:
+                self.slots[d][s] = -1
         
     def start(self):
         self.init_slots()
@@ -60,14 +60,7 @@ class ChangeChecker():
                 print("Checking at time:", current_time.strftime("%H:%M:%S"))
         
                 
-                for i in range(self.attempts):
-                    try:                    
-                        result = self.update_slots()
-                        break
-                    except:
-                        self.driver.quit()
-                        self.__init__()
-                if result:
+                if self.update_slots():
                     report = "Update %s\n"%str(current_time)
                     report += self.get_report()
                     if not self.notifier.notify(report):
@@ -81,16 +74,17 @@ class ChangeChecker():
         
     def go_to(self, link):
         succeeded = False
-        
-        while not succeeded:
-            try:
+        for i in range(self.attempts):
+            try :
                 self.driver.get(link)
                 time.sleep(1)
                 succeeded = True
+                break
             except:
-                succeeded = False
-
-
+                self.driver.quit()
+                self.__init__()
+        return succeeded
+    
     def set_days(self, i):
         select = Select(self.driver.find_element_by_id(config.INPUT_FIELD))
         select.select_by_value(str(i))
